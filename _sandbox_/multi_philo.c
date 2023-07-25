@@ -32,6 +32,7 @@ If there is only one Philosopher, there should be only one fork.
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <sys/time.h>
 
 #define	PHILO_NUM 5
@@ -51,22 +52,23 @@ typedef struct s_in_data
 
 typedef struct s_philo
 {
-	int				id;
-	int				meals;
-	int				status;
-	int				eating;
-	long			death_clock;
-	pthread_t		thread;
-	pthread_mutex_t	lock;
-	pthread_mutex_t	*left_fork;
-	pthread_mutex_t	*right_fork;
+	t_in_data	*in_data;
+	pthread_t	thread;
+	int			id;
+	int			meals;
+	int			status;
+	int			eating;
+	int			left_fork;
+	int			right_fork;
+	long		last_meal_time;
 }	t_philo;
 
 typedef struct s_data
 {
+	long			current_time;
 	t_in_data		in_data;
-	pthread_t		threads_id[PHILO_NUM];
 	t_philo			philos[PHILO_NUM];
+	pthread_t		threads_id[PHILO_NUM];
 	pthread_mutex_t	forks[PHILO_NUM];
 	pthread_mutex_t	mutex_lock;
 	pthread_mutex_t	write;
@@ -90,14 +92,14 @@ void	init_philo_struct(t_data *data)
 	{
 		/* initializing struct for each philosopher */
 		philo = &(data->philos[i]);
-		philo->id = i + 1;
+		philo->in_data = data;
+		philo->id = i;
 		philo->status = 0;
 		philo->meals = 0;
 		philo->eating = 0;
-		philo->death_clock = get_current_time() + data->in_data.time_to_die;
-		philo->left_fork = &(data->forks[i]);
-		philo->right_fork = &(data->forks[(i + 1) % data->in_data.number_of_philosophers]);
-		pthread_mutex_init(&(philo->lock), NULL);
+		philo->last_meal_time = 0;
+		philo->left_fork = i;
+		philo->right_fork = (i + 1) % philo->in_data->number_of_philosophers;
 		i++;
 	}
 }
@@ -109,7 +111,6 @@ void	init_input_data(t_data *data)
 	data->in_data.time_to_eat = TIME_TO_EAT;
 	data->in_data.time_to_sleep = TIME_TO_SLEEP;
 	data->in_data.number_of_meals = MIN_MEALS;
-	init_philo_struct(data);
 }
 
 void	*routine(void *data_ptr)
@@ -162,24 +163,55 @@ void	*routine(void *data_ptr)
 	return NULL;
 }
 
+bool	initialize_mutex(t_data *data)
+{
+	int	i;
+
+	if (pthread_mutex_init(&(data->mutex_lock), NULL) != 0)
+		return (false);
+	if (pthread_mutex_init(&(data->write), NULL) != 0)
+		return (false);
+	i = 0;
+	while (i < data->in_data.number_of_philosophers)
+	{
+		if (pthread_mutex_init(&(data->forks[i]), NULL) != 0)
+			return (false);
+		i++;
+	}
+	return (true);
+}
+
+bool	launched_threads(t_data *data)
+{
+	t_philo	*philo;
+	int		i;
+
+	data->current_time = get_current_time();
+	philo = data->philos;
+	i = 0;
+	while (i < data->in_data.number_of_philosophers)
+	{
+		if (pthread_create(&(philo[i].thread), NULL, routine, &(philo[i])) != 0)
+			return (false);
+		philo[i].last_meal_time = get_current_time();
+		i++;
+	}
+	return (true);
+}
+
 int	main(int argc, char **argv)
 {
 	t_data	data;
 	int		i;
 
 	init_input_data(&data);
+	if (!initialize_mutex(&data))
+		printf("Mutex init error\n");
+	init_philo_struct(&data);
+	if (!launched_threads(&data))
+		printf("Thread Error\n");
 
-	pthread_mutex_init(&(data.mutex_lock), NULL);
-	pthread_mutex_init(&(data.write), NULL);
-	i = 0;
-	while (i < data.in_data.number_of_philosophers)
-	{
-		if (pthread_mutex_init(&(data.forks[i]), NULL) != 0)
-		{
-			printf("Mutex init error\n");
-		}
-		i++;
-	}
+
 	i = 0;
 	while (i < data.in_data.number_of_philosophers)
 	{
