@@ -34,180 +34,182 @@ If there is only one Philosopher, there should be only one fork.
 #include <unistd.h>
 #include <sys/time.h>
 
-// Define the structure for a philosopher
+#define	PHILO_NUM 5
+#define	TIME_TO_DIE 800
+#define	TIME_TO_EAT 200
+#define	TIME_TO_SLEEP 200
+#define	MIN_MEALS 7
+
+typedef struct s_in_data
+{
+	long	number_of_philosophers;
+	long	time_to_die;
+	long	time_to_eat;
+	long	time_to_sleep;
+	long	number_of_meals;
+}	t_in_data;
+
+typedef struct s_philo
+{
+	int				id;
+	int				meals;
+	int				status;
+	int				eating;
+	long			death_clock;
+	pthread_t		thread;
+	pthread_mutex_t	lock;
+	pthread_mutex_t	*left_fork;
+	pthread_mutex_t	*right_fork;
+}	t_philo;
+
 typedef struct s_data
 {
-	int	number_of_philosophers;
-	int	time_to_die;
-	int	time_to_eat;
-	int	time_to_sleep;
-	int	number_of_times_each_philo_must_eat;
+	t_in_data		in_data;
+	pthread_t		threads_id[PHILO_NUM];
+	t_philo			philos[PHILO_NUM];
+	pthread_mutex_t	forks[PHILO_NUM];
+	pthread_mutex_t	mutex_lock;
+	pthread_mutex_t	write;
 }	t_data;
 
-typedef struct s_philosopher 
+long	get_current_time()
 {
-	t_data				*data;
-	int					philosopher_id;
-	pthread_mutex_t		*left_fork;
-	pthread_mutex_t		*right_fork;
-	int					time_to_eat;
-	int					time_to_sleep;
-	int					number_of_times_to_eat;
-	pthread_mutex_t		*forks_to_eat_mutex;
-	int					*forks_to_eat;
-}	t_philosopher;
+	struct timeval	tp;
 
-// Define the function prototypes
-void	*philosopher_action(void *arg);
-void	pick_forks(t_philosopher *philosopher);
-void	release_forks(t_philosopher *philosopher);
-void	print_action(int philosopher_id, char *action);
-
-int	main(int argc, char **argv)
-{
-	t_data	input_data;
-
-	if (argc < 6)
-	{
-		printf("Invalid number of arguments.\n");
-		printf("Usage: ./philosophers <number_of_philosophers> <time_to_die> <time_to_eat> <time_to_sleep> <number_of_times_each_philo_must_eat>\n");
-		return 1;
-	}
-
-	input_data.number_of_philosophers = atoi(argv[1]);
-	input_data.time_to_die = atoi(argv[2]);
-	input_data.time_to_eat = atoi(argv[3]);
-	input_data.time_to_sleep = atoi(argv[4]);
-	input_data.number_of_times_each_philo_must_eat = atoi(argv[5]);
-
-	// Allocate memory for philosophers and forks
-	t_philosopher	*philosophers;
-	pthread_t		*philosopher_threads;
-	pthread_mutex_t	*forks;
-	int				*forks_to_eat;
-	pthread_mutex_t	forks_to_eat_mutex;
-	int i = 0;
-
-	philosophers = malloc(input_data.number_of_philosophers * sizeof(t_philosopher));
-	philosopher_threads = malloc(input_data.number_of_philosophers * sizeof(pthread_t));
-	forks = malloc(input_data.number_of_philosophers * sizeof(pthread_mutex_t));
-	forks_to_eat = malloc(input_data.number_of_philosophers * sizeof(int));
-
-	// Initialize the forks and forks_to_eat_mutex
-	i = 0;
-	while (i < input_data.number_of_philosophers)
-	{
-		pthread_mutex_init(&forks[i], NULL);
-		forks_to_eat[i] = input_data.number_of_times_each_philo_must_eat;
-		i++;
-	}
-	pthread_mutex_init(&forks_to_eat_mutex, NULL);
-
-	// Create the philosopher threads
-	i = 0;
-	while (i < input_data.number_of_philosophers)
-	{
-		philosophers[i].philosopher_id = i + 1;
-		philosophers[i].left_fork = &forks[i];
-		philosophers[i].right_fork = &forks[(i + 1) % input_data.number_of_philosophers];
-		philosophers[i].time_to_eat = input_data.time_to_eat;
-		philosophers[i].time_to_sleep = input_data.time_to_sleep;
-		philosophers[i].number_of_times_to_eat = input_data.number_of_times_each_philo_must_eat;
-		philosophers[i].forks_to_eat_mutex = &forks_to_eat_mutex;
-		philosophers[i].forks_to_eat = forks_to_eat;
-
-		pthread_create(&philosopher_threads[i], NULL, philosopher_action, &philosophers[i]);
-		i++;
-	}
-
-	// Wait for all philosopher threads to finish
-	i = 0;
-	while (i < input_data.number_of_philosophers)
-	{
-		pthread_join(philosopher_threads[i], NULL);
-		i++;
-	}
-
-	// Cleanup and free memory
-	i = 0;
-	while (i < input_data.number_of_philosophers)
-	{
-		pthread_mutex_destroy(&forks[i]);
-	}
-	pthread_mutex_destroy(&forks_to_eat_mutex);
-
-	free(philosophers);
-	free(philosopher_threads);
-	free(forks);
-	free(forks_to_eat);
-
-	return 0;
+	gettimeofday(&tp, NULL);
+	return ((tp.tv_sec * 1000) + (tp.tv_usec / 1000));
 }
 
-void* philosopher_action(void* arg)
+void	init_philo_struct(t_data *data)
 {
-	t_philosopher	*philosopher = (t_philosopher *)arg;
-	int 			philosopher_id = philosopher->philosopher_id;
-	//int time_to_die = atoi(argv[2]);
-	int				time_to_die = philosopher->data->time_to_die;
-	struct timeval	current_time;
-	int				forks_to_eat;
+	t_philo	*philo;
+	int		i;
 
+	i = 0;
+	while (i < data->in_data.number_of_philosophers)
+	{
+		/* initializing struct for each philosopher */
+		philo = &(data->philos[i]);
+		philo->id = i + 1;
+		philo->status = 0;
+		philo->meals = 0;
+		philo->eating = 0;
+		philo->death_clock = get_current_time() + data->in_data.time_to_die;
+		philo->left_fork = &(data->forks[i]);
+		philo->right_fork = &(data->forks[(i + 1) % data->in_data.number_of_philosophers]);
+		pthread_mutex_init(&(philo->lock), NULL);
+		i++;
+	}
+}
+
+void	init_input_data(t_data *data)
+{
+	data->in_data.number_of_philosophers = PHILO_NUM;
+	data->in_data.time_to_die = TIME_TO_DIE;
+	data->in_data.time_to_eat = TIME_TO_EAT;
+	data->in_data.time_to_sleep = TIME_TO_SLEEP;
+	data->in_data.number_of_meals = MIN_MEALS;
+	init_philo_struct(data);
+}
+
+void	*routine(void *data_ptr)
+{
+	t_data	*data = (t_data *)data_ptr;
+	t_philo *philo = &(data->philos[data->id - 1]);
+
+	pthread_mutex_lock(&(philo->lock));
 	while (1)
 	{
-		pick_forks(philosopher);
-		print_action(philosopher_id, "is eating");
-		usleep(philosopher->time_to_eat * 1000); // Sleep in microseconds
-		
-		// Update philosopher's state
-		gettimeofday(&current_time, NULL);
-		
-		pthread_mutex_lock(philosopher->forks_to_eat_mutex);
-		philosopher->forks_to_eat--;
-		forks_to_eat = *philosopher->forks_to_eat;
-		pthread_mutex_unlock(philosopher->forks_to_eat_mutex);
-		
-		if (time_to_die > 0 && forks_to_eat <= 0)
+		if (philo->status == 0)
 		{
-			print_action(philosopher_id, "died");
-			break;
+			philo->status = 1;
+			printf("(%ldms) %d has taken a fork\n", get_current_time(), philo->id);
+			pthread_mutex_lock(philo->left_fork);
+			printf("(%ldms) %d has taken a fork\n", get_current_time(), philo->id);
+			pthread_mutex_lock(philo->right_fork);
+			printf("(%ldms) %d is eating\n", get_current_time(), philo->id);
+			philo->eating = 1;
+			philo->meals++;
+			philo->death_clock = get_current_time() + data->in_data.time_to_die;
+			usleep(data->in_data.time_to_eat * 1000);
 		}
-		
-		release_forks(philosopher);
-		print_action(philosopher_id, "is sleeping");
-		usleep(philosopher->time_to_sleep * 1000); // Sleep in microseconds
-		print_action(philosopher_id, "is thinking");
-
-		// Check if all philosophers have eaten enough
-		if (forks_to_eat <= 0)
+		else if (philo->status == 1)
 		{
+			philo->status = 2;
+			printf("(%ldms) %d is sleeping\n", get_current_time(), philo->id);
+			pthread_mutex_unlock(philo->left_fork);
+			pthread_mutex_unlock(philo->right_fork);
+			philo->eating = 0;
+			usleep(data->in_data.time_to_sleep * 1000);
+		}
+		else if (philo->status == 2)
+		{
+			printf("(%ldms) %d is thinking\n", get_current_time(), philo->id);
+		}
+
+		if (data->in_data.number_of_meals > 0 && philo->meals >= data->in_data.number_of_meals)
 			break;
+
+		if (get_current_time() >= philo->death_clock)
+		{
+			pthread_mutex_lock(&(data->write));
+			printf("(%ldms) %d died\n", get_current_time(), philo->id);
+			pthread_mutex_unlock(&(data->write));
+			return NULL;
 		}
 	}
+	pthread_mutex_unlock(&(philo->lock));
 	return NULL;
 }
 
-void	pick_forks(t_philosopher* philosopher)
+int	main(int argc, char **argv)
 {
-	pthread_mutex_lock(philosopher->left_fork);
-	print_action(philosopher->philosopher_id, "has taken a fork");
-	pthread_mutex_lock(philosopher->right_fork);
-	print_action(philosopher->philosopher_id, "has taken a fork");
-}
+	t_data	data;
+	int		i;
 
-void	release_forks(t_philosopher* philosopher)
-{
-	pthread_mutex_unlock(philosopher->left_fork);
-	pthread_mutex_unlock(philosopher->right_fork);
-	print_action(philosopher->philosopher_id, "has released the forks");
-}
+	init_input_data(&data);
 
-void	print_action(int philosopher_id, char* action)
-{
-	struct timeval current_time;
-	gettimeofday(&current_time, NULL);
-	long timestamp = current_time.tv_sec * 1000 + current_time.tv_usec / 1000;
-	printf("(%ld ms) Philosopher %d %s\n", timestamp, philosopher_id, action);
+	pthread_mutex_init(&(data.mutex_lock), NULL);
+	pthread_mutex_init(&(data.write), NULL);
+	i = 0;
+	while (i < data.in_data.number_of_philosophers)
+	{
+		if (pthread_mutex_init(&(data.forks[i]), NULL) != 0)
+		{
+			printf("Mutex init error\n");
+		}
+		i++;
+	}
+	i = 0;
+	while (i < data.in_data.number_of_philosophers)
+	{
+		if (pthread_create(&(data.threads_id[i]), NULL, routine, &data) != 0)
+		{
+			printf("Pthread create error\n");
+		}
+		i++;
+	}
+	i = 0;
+	while (i < data.in_data.number_of_philosophers)
+	{
+		if (pthread_join(data.threads_id[i], NULL) != 0)
+		{
+			printf("Pthread join error\n");
+		}
+		i++;
+	}
+	i = 0;
+	while (i < data.in_data.number_of_philosophers)
+	{
+		if (pthread_mutex_destroy(&(data.forks[i])) != 0)
+		{
+			printf("Pthread join error\n");
+		}
+		i++;
+	}
+	pthread_mutex_destroy(&(data.mutex_lock));
+	pthread_mutex_destroy(&(data.write));
+	return 0;
 }
 
 
