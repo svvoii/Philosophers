@@ -29,11 +29,13 @@ If there is only one Philosopher, there should be only one fork.
 */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <sys/time.h>
+#include <time.h>
 
 #define	PHILO_NUM 5
 #define	TIME_TO_DIE 800
@@ -41,6 +43,17 @@ If there is only one Philosopher, there should be only one fork.
 #define	TIME_TO_SLEEP 200
 #define	MIN_MEALS 7
 
+enum	e_state
+{
+	ALIVE,
+	HUNGRY,
+	EATING,
+	TIRED,
+	SLEEPING,
+	THINKING
+};
+
+/* this holds the initial input data */
 typedef struct s_in_data
 {
 	long	number_of_philosophers;
@@ -50,25 +63,30 @@ typedef struct s_in_data
 	long	number_of_meals;
 }	t_in_data;
 
+/* this data reflects the current status of the philo */
+typedef struct s_status
+{
+	enum e_state	state;
+	int				meals;
+	int64_t			last_meal_time;
+	int64_t			next_meal_time;
+}	t_status;
+
 typedef struct s_philo
 {
-	t_in_data	*in_data;
-	pthread_t	thread;
-	int			id;
-	int			meals;
-	int			status;
-	int			eating;
-	int			left_fork;
-	int			right_fork;
-	long		last_meal_time;
+	pthread_t		thread;
+	int				id;
+	int				left_fork;
+	int				right_fork;
+	t_status		status;
+	struct s_data	*data;
 }	t_philo;
 
 typedef struct s_data
 {
-	long			current_time;
+	int64_t			start_time;
 	t_in_data		in_data;
 	t_philo			philos[PHILO_NUM];
-	pthread_t		threads_id[PHILO_NUM];
 	pthread_mutex_t	forks[PHILO_NUM];
 	pthread_mutex_t	mutex_lock;
 	pthread_mutex_t	write;
@@ -82,26 +100,69 @@ long	get_current_time()
 	return ((tp.tv_sec * 1000) + (tp.tv_usec / 1000));
 }
 
+/* DEBUG */
+char	*print_state(enum e_state state)
+{
+	if (state == HUNGRY)
+		return ("HUNGRY");
+	else if (state == EATING)
+		return ("EATING");
+	else if (state == TIRED)
+		return ("TIRED");
+	else if (state == SLEEPING)
+		return ("SLEEPING");
+	else if (state == THINKING)
+		return ("THINKING");
+	return ("ALIVE");
+}
+void	print_philo(t_data *data)
+{
+	t_philo	*philo;
+	int		i = 0;
+
+	printf("..print_philo..\n");
+	while (i < data->in_data.number_of_philosophers)
+	{
+		philo = &(data->philos[i]);
+		printf("\t[%d] philo id: [%d]\t", i, philo->id);
+		printf("left_fork: [%d], right_fork: [%d]\t", philo->left_fork, philo->right_fork);
+		printf("state: [%s]\t", print_state(philo->status.state));
+		printf("meals:[%d]\n", philo->status.meals);
+		printf("\t\tlast_meal_time:[%ld]ms\n", philo->status.last_meal_time);
+		printf("\t\tnext_meal_time:[%ld]ms\n", philo->status.next_meal_time);
+		printf("\t\tnext - last:[%ld]ms\n", philo->status.next_meal_time - philo->status.last_meal_time);
+		i++;
+	}
+}
+/* ***** */
+
 void	init_philo_struct(t_data *data)
 {
 	t_philo	*philo;
+	long	total_philo;
 	int		i;
 
+	printf("..init_philo..\n");
+	data->start_time = get_current_time();
 	i = 0;
 	while (i < data->in_data.number_of_philosophers)
 	{
 		/* initializing struct for each philosopher */
 		philo = &(data->philos[i]);
-		philo->in_data = data;
+		total_philo = data->in_data.number_of_philosophers;
 		philo->id = i;
-		philo->status = 0;
-		philo->meals = 0;
-		philo->eating = 0;
-		philo->last_meal_time = 0;
 		philo->left_fork = i;
-		philo->right_fork = (i + 1) % philo->in_data->number_of_philosophers;
+		philo->right_fork = (i + 1) % total_philo;
+		philo->status.state = HUNGRY;
+		philo->status.meals = 0;
+		philo->status.last_meal_time = data->start_time;
+		philo->status.next_meal_time = data->start_time + data->in_data.time_to_die;
+		philo->data = data;
 		i++;
 	}
+	/* DEBUG */
+	print_philo(data);
+	/* ***** */
 }
 
 void	init_input_data(t_data *data)
@@ -111,56 +172,6 @@ void	init_input_data(t_data *data)
 	data->in_data.time_to_eat = TIME_TO_EAT;
 	data->in_data.time_to_sleep = TIME_TO_SLEEP;
 	data->in_data.number_of_meals = MIN_MEALS;
-}
-
-void	*routine(void *data_ptr)
-{
-	t_data	*data = (t_data *)data_ptr;
-	t_philo *philo = &(data->philos[data->id - 1]);
-
-	pthread_mutex_lock(&(philo->lock));
-	while (1)
-	{
-		if (philo->status == 0)
-		{
-			philo->status = 1;
-			printf("(%ldms) %d has taken a fork\n", get_current_time(), philo->id);
-			pthread_mutex_lock(philo->left_fork);
-			printf("(%ldms) %d has taken a fork\n", get_current_time(), philo->id);
-			pthread_mutex_lock(philo->right_fork);
-			printf("(%ldms) %d is eating\n", get_current_time(), philo->id);
-			philo->eating = 1;
-			philo->meals++;
-			philo->death_clock = get_current_time() + data->in_data.time_to_die;
-			usleep(data->in_data.time_to_eat * 1000);
-		}
-		else if (philo->status == 1)
-		{
-			philo->status = 2;
-			printf("(%ldms) %d is sleeping\n", get_current_time(), philo->id);
-			pthread_mutex_unlock(philo->left_fork);
-			pthread_mutex_unlock(philo->right_fork);
-			philo->eating = 0;
-			usleep(data->in_data.time_to_sleep * 1000);
-		}
-		else if (philo->status == 2)
-		{
-			printf("(%ldms) %d is thinking\n", get_current_time(), philo->id);
-		}
-
-		if (data->in_data.number_of_meals > 0 && philo->meals >= data->in_data.number_of_meals)
-			break;
-
-		if (get_current_time() >= philo->death_clock)
-		{
-			pthread_mutex_lock(&(data->write));
-			printf("(%ldms) %d died\n", get_current_time(), philo->id);
-			pthread_mutex_unlock(&(data->write));
-			return NULL;
-		}
-	}
-	pthread_mutex_unlock(&(philo->lock));
-	return NULL;
 }
 
 bool	initialize_mutex(t_data *data)
@@ -181,19 +192,24 @@ bool	initialize_mutex(t_data *data)
 	return (true);
 }
 
+void	*routine(void *philo_ptr);
+void	*life_monitor(void *data_ptr);
+
 bool	launched_threads(t_data *data)
 {
 	t_philo	*philo;
 	int		i;
 
-	data->current_time = get_current_time();
-	philo = data->philos;
+	/*
+	if (pthread_create(null_thread, NULL, &life_monitor, data) != 0)
+		return (false);
+	*/
 	i = 0;
 	while (i < data->in_data.number_of_philosophers)
 	{
-		if (pthread_create(&(philo[i].thread), NULL, routine, &(philo[i])) != 0)
+		philo = &(data->philos[i]);
+		if (pthread_create(&(philo->thread), NULL, &routine, philo) != 0)
 			return (false);
-		philo[i].last_meal_time = get_current_time();
 		i++;
 	}
 	return (true);
@@ -201,30 +217,24 @@ bool	launched_threads(t_data *data)
 
 int	main(int argc, char **argv)
 {
-	t_data	data;
-	int		i;
+	t_data		data;
+	int			i;
 
 	init_input_data(&data);
 	if (!initialize_mutex(&data))
 		printf("Mutex init error\n");
+	printf("Mutex init OK\n");
 	init_philo_struct(&data);
 	if (!launched_threads(&data))
 		printf("Thread Error\n");
-
+	/* DEBUG */
+	printf("START TIME: [%ld]ms\n", data.start_time);
+	/* ***** */
 
 	i = 0;
 	while (i < data.in_data.number_of_philosophers)
 	{
-		if (pthread_create(&(data.threads_id[i]), NULL, routine, &data) != 0)
-		{
-			printf("Pthread create error\n");
-		}
-		i++;
-	}
-	i = 0;
-	while (i < data.in_data.number_of_philosophers)
-	{
-		if (pthread_join(data.threads_id[i], NULL) != 0)
+		if (pthread_join(data.philos[i].thread, NULL) != 0)
 		{
 			printf("Pthread join error\n");
 		}
@@ -235,7 +245,7 @@ int	main(int argc, char **argv)
 	{
 		if (pthread_mutex_destroy(&(data.forks[i])) != 0)
 		{
-			printf("Pthread join error\n");
+			printf("Pthread mutex destroy error\n");
 		}
 		i++;
 	}
@@ -244,6 +254,131 @@ int	main(int argc, char **argv)
 	return 0;
 }
 
+void	*life_monitor(void *data_ptr)
+{
+	/* the function to monitore if the philos are alive */
+	printf("\tlife_monitor\tdata @ [%p]\n", data_ptr);
+}
+
+bool	philosophers_alive(t_philo *philo)
+{
+	t_data	*data;
+	t_philo	*philo_tmp;
+	int64_t	current_time;
+	int		i;
+
+	data = philo->data;
+	i = 0;
+	while (i < data->in_data.number_of_philosophers)
+	{
+		philo_tmp = &data->philos[i];
+		current_time = get_current_time();
+		if (current_time > philo_tmp->status.next_meal_time)
+		{
+			printf("%ld\t%d is no longer alive :(\n", current_time - data->start_time, philo_tmp->id);
+			return (false);
+		}
+		i++;
+	}
+	return (true);
+}
+
+bool	available_meals(t_philo *philo)
+{
+	t_data	*data;
+	t_philo	*philo_tmp;
+	int		i;
+
+	data = philo->data;
+	if (data->in_data.number_of_meals > 0)
+	{
+		i = 0;
+		while (i < data->in_data.number_of_philosophers)
+		{
+			philo_tmp = &data->philos[i];
+			if (philo_tmp->status.meals >= data->in_data.number_of_meals)
+				return (false);
+			i++;
+		}
+	}
+	return (true);
+}
+
+void	*routine(void *philo_ptr)
+{
+	t_philo	*philo;
+	long	total_philo;
+	int		i;
+
+	philo = (t_philo *)philo_ptr;
+	total_philo = philo->data->in_data.number_of_philosophers;
+	/* DEBUG */
+	//printf("\troutine\tphilo: [%d] @ [%p]\n", philo->id, philo);
+	/* ***** */
+	i = 0;
+	while (i < total_philo && philosophers_alive(philo) && available_meals(philo))
+	{
+		//pthread_mutex_lock(&(philo->data->mutex_lock));
+		if (philo->status.state == HUNGRY)
+		{
+			printf("Philo [%d] is HUNGRY\n", philo->id);
+		}
+		i++;
+	}
+
+	//pthread_mutex_unlock(&(philo->data->mutex_lock));
+}
+
+/*
+void	*routine(void *philo_ptr)
+{
+	t_philo *philo = (t_philo *)philo_ptr;
+
+	pthread_mutex_lock(&(philo->data->mutex_lock));
+	while (1)
+	{
+		if (philo->status.state == HUNGRY)
+		{
+			philo->status.state = EATING;
+			printf("(%ldms) %d has taken a fork\n", get_current_time(), philo->id);
+			pthread_mutex_lock(&(philo->data->forks[philo->left_fork]));
+			printf("(%ldms) %d has taken a fork\n", get_current_time(), philo->id);
+			pthread_mutex_lock(&(philo->data->forks[philo->right_fork]));
+			printf("(%ldms) %d is eating\n", get_current_time(), philo->id);
+			philo->status.meals++;
+			philo->status.last_meal_time = get_current_time();
+			philo->status.next_meal_time = get_current_time() + philo->data->in_data.time_to_die;
+			usleep(philo->data->in_data.time_to_eat * 1000);
+			pthread_mutex_unlock(&(philo->data->forks[philo->left_fork]));
+			pthread_mutex_unlock(&(philo->data->forks[philo->right_fork]));
+			philo->status.state = TIRED;
+		}
+		else if (philo->status.state == TIRED)
+		{
+			philo->status.state = SLEEPING;
+			printf("(%ldms) %d is sleeping\n", get_current_time(), philo->id);
+			usleep(philo->data->in_data.time_to_sleep * 1000);
+			philo->status.state = THINKING;
+		}
+		else if (philo->status.state == THINKING)
+		{
+			printf("(%ldms) %d is thinking\n", get_current_time(), philo->id);
+		}
+		if (philo->data->in_data.number_of_meals > 0 && philo->status.meals >= philo->data->in_data.number_of_meals)
+			break;
+
+		if (get_current_time() >= philo->status.next_meal_time)
+		{
+			pthread_mutex_lock(&(philo->data->write));
+			printf("(%ldms) %d died\n", get_current_time(), philo->id);
+			pthread_mutex_unlock(&(philo->data->write));
+			return NULL;
+		}
+	}
+	pthread_mutex_unlock(&(philo->data->mutex_lock));
+	return NULL;
+}
+*/
 
 /*
 This code implements the solution to the Philosophers problem using threads and mutexes. 
