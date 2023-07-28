@@ -41,8 +41,44 @@ External functions:
 
 */
 
+#include "philosophers.h"
+
 int	main(int argc, char **argv)
 {
+	(void)argc;
+	(void)argv;
 
-	return (0);
+	t_data		data;
+	int			i;
+
+	init_input_data(&data);
+	if (!initialize_mutex(&data))
+		printf("Mutex init error\n");
+	init_philo_struct(&data);
+	if (!launched_threads(&data))
+		printf("Thread Error\n");
+	/* DEBUG */
+	//printf("\tjoining threads and destroing\n");
+	/* ***** */
+
+	i = 0;
+	while (i < data.in_data.number_of_philosophers)
+	{
+		if (pthread_join(data.philos[i].thread, NULL) != 0)
+		{
+			printf("Pthread join error\n");
+		}
+		i++;
+	}
+	i = 0;
+	while (i < data.in_data.number_of_philosophers)
+	{
+		if (pthread_mutex_destroy(&(data.forks[i])) != 0)
+		{
+			printf("Pthread mutex destroy error\n");
+		}
+		i++;
+	}
+	pthread_mutex_destroy(&(data.mutex_print_log));
+	return 0;
 }
