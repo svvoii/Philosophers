@@ -6,33 +6,33 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:15:28 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/07/29 18:02:43 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/07/29 21:00:33 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-/* This will monitor whether all philos are still alive, inside routine */
-bool	philosophers_alive(t_philo *philo)
+bool	life_monitor(t_data *data)
 {
-	t_data	*data;
-	t_philo	*philo_tmp;
 	int64_t	current_time;
 	int		i;
 
-	data = philo->data;
 	current_time = get_current_time();
 	i = 0;
 	while (i < data->in_data.number_of_philosophers)
 	{
-		philo_tmp = &data->philos[i];
-		/* DEBUG */
-		//printf("\tnext_meal - cur_time:[%ld]\tPhilo [%d] status: [%s]\n", philo->status.next_meal_time - current_time, philo_tmp->id, print_state(philo->status.state));
+		/* DEBUG  
+		pthread_mutex_lock(&(data->mutex_print_log));
+		printf("\t\t\t[%d] next_meal - time[%ld]\n", data->philos[i].id, data->philos[i].status.next_meal_time - get_current_time());
+		pthread_mutex_unlock(&(data->mutex_print_log));
+		*/
 		/* ***** */
-		if (current_time >= philo_tmp->status.next_meal_time)
+		if (current_time >= data->philos[i].status.next_meal_time)
 		{
-			philo->status.state = NOT_ALIVE;
-			print_log(philo_tmp, "is no longer alive :(");
+			print_log(&data->philos[i], "is DEAD");
+			i = -1;
+			while (++i < data->in_data.number_of_philosophers)
+				data->philos[i].status.state = NOT_ALIVE;
 			return (false);
 		}
 		i++;
@@ -40,54 +40,26 @@ bool	philosophers_alive(t_philo *philo)
 	return (true);
 }
 
-bool	meals_condition(t_philo *philo)
+bool	meals_condition(t_data *data)
 {
-	t_data	*data;
-	t_philo	*philo_tmp;
+	t_philo	*philo;
 	int		i;
 
-	data = philo->data;
 	if (data->in_data.number_of_meals > 0)
 	{
 		i = 0;
 		while (i < data->in_data.number_of_philosophers)
 		{
-			philo_tmp = &data->philos[i];
-			if (philo_tmp->status.meals < data->in_data.number_of_meals)
+			philo = &data->philos[i];
+			if (philo->status.meals < data->in_data.number_of_meals)
 				return (true);
 			i++;
 		}
 	}
 	else
 		return (true);
+	i = -1;
+	while (++i < data->in_data.number_of_philosophers)
+		data->philos[i].status.state = FULL;	
 	return (false);
 }
-
-/*
-bool	available_meals(t_philo *philo)
-{
-	t_data	*data;
-	t_philo	*philo_tmp;
-	int		i;
-
-	data = philo->data;
-	if (data->in_data.number_of_meals > 0)
-	{
-		i = 0;
-		while (i < data->in_data.number_of_philosophers)
-		{
-			philo_tmp = &data->philos[i];
-			if (philo_tmp->status.meals >= data->in_data.number_of_meals)
-				return (false);
-			i++;
-		}
-	}
-	return (true);
-}
-
-void	*life_monitor(void *data_ptr)
-{
-	printf("\tlife_monitor\tdata @ [%p]\n", data_ptr);
-	return (NULL);
-}
-*/

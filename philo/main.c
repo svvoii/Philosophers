@@ -58,9 +58,13 @@ int	main(int argc, char **argv)
 	if (!launched_threads(&data))
 		printf("Thread Error\n");
 	/* DEBUG */
-	printf("\tmonitoring\n");
+	//printf("\tmonitoring\n");
 	/* ***** */
-
+	while (meals_condition(&data))
+	{
+		if (!life_monitor(&data))
+			break ;
+	}
 	i = 0;
 	while (i < data.in_data.number_of_philosophers)
 	{
