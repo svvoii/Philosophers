@@ -58,7 +58,7 @@ int	main(int argc, char **argv)
 	if (!launched_threads(&data))
 		printf("Thread Error\n");
 	/* DEBUG */
-	//printf("\tjoining threads and destroing\n");
+	printf("\tmonitoring\n");
 	/* ***** */
 
 	i = 0;

@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:17:36 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/07/28 18:39:23 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/07/29 17:36:13 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,10 +28,10 @@ void	init_philo_struct(t_data *data)
 		philo->id = i;
 		philo->left_fork = i;
 		philo->right_fork = (i + 1) % total_philo;
-		philo->status.state = HUNGRY;
+		philo->status.state = ALIVE;
 		philo->status.meals = 0;
 		philo->status.last_meal_time = data->start_time;
-		philo->status.next_meal_time = data->start_time + data->in_data.time_to_die;
+		philo->status.next_meal_time = philo->status.last_meal_time + data->in_data.time_to_die;
 		philo->data = data;
 		i++;
 	}

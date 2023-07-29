@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:20:39 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/07/28 19:12:21 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/07/29 18:05:05 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,12 +22,13 @@
 # include <sys/time.h>
 # include <time.h>
 
-# define	PHILO_NUM 5
-# define	TIME_TO_DIE 800
-# define	TIME_TO_EAT 200
-# define	TIME_TO_SLEEP 200
-# define	MIN_MEALS 7
+# define	PHILO_NUM 		2
+# define	TIME_TO_DIE 	310
+# define	TIME_TO_EAT 	200
+# define	TIME_TO_SLEEP 	100
+# define	MIN_MEALS 		0
 
+/*
 enum	e_state
 {
 	NOT_ALIVE,
@@ -35,6 +36,12 @@ enum	e_state
 	EATING,
 	SLEEPING,
 	THINKING
+};
+*/
+enum	e_state
+{
+	NOT_ALIVE,
+	ALIVE
 };
 
 /* this holds the initial input data */
@@ -91,7 +98,8 @@ bool	launched_threads(t_data *data);
 
 /* monitor.c */
 bool	philosophers_alive(t_philo *philo);
-bool	available_meals(t_philo *philo);
+bool	meals_condition(t_philo *philo);
+//bool	available_meals(t_philo *philo);
 //void	*life_monitor(void *data_ptr);
 
 /* routine.c */

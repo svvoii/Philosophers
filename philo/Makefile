@@ -6,7 +6,7 @@
 #    By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/28 12:29:37 by sbocanci          #+#    #+#              #
-#    Updated: 2023/07/28 18:23:17 by sbocanci         ###   ########.fr        #
+#    Updated: 2023/07/28 18:23:17by sbocanci         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -54,7 +54,6 @@ $(NAME): $(OBJS)
 
 $%.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
-	@printf "$(_BLUE)Generating $(NAME) objects...$(_GREEN)%-33.33s\r$(_NC)" $@
 
 clean:
 	$(RM) $(OBJS)
