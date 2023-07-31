@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:07:19 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/07/28 19:10:40 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/07/31 16:38:24 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,8 @@ void	print_log(t_philo *philo, char *message)
 
 	data = philo->data;
 	pthread_mutex_lock(&(philo->data->mutex_print_log));
-	//printf("[%ld] Philo [%d] %s\n", timestamp(data), philo->id, message);
-	printf("[%ld] Philo [%d] %s\t", timestamp(data), philo->id, message);
-	printf("(meals:[%d])\n", philo->status.meals);
+	printf("%ld %d %s\n", timestamp(data), philo->id, message);
+	//printf("(meals:[%d])\n", philo->status.meals);
 	//printf("next_meal:[%ld])\n", philo->status.next_meal_time - current_time);
 	pthread_mutex_unlock(&(philo->data->mutex_print_log));
 }

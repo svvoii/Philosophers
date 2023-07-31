@@ -65,6 +65,18 @@ int	main(int argc, char **argv)
 		if (!life_monitor(&data))
 			break ;
 	}
+	/* DEBUG */
+	/*
+	pthread_mutex_lock(&(data.mutex_print_log));
+	i = -1;
+	while (++i < data.in_data.number_of_philosophers)
+	{
+		printf("\t[%ld] [%d] state:[%s]\t", timestamp(&data), i, print_state(data.philos[i].status.state));
+		printf("\tmelals:[%d], min_meals:[%ld]\n", data.philos[i].status.meals, data.in_data.number_of_meals);
+	}
+	pthread_mutex_unlock(&(data.mutex_print_log));
+	*/
+	/* ***** */
 	i = 0;
 	while (i < data.in_data.number_of_philosophers)
 	{

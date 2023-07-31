@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:20:39 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/07/29 21:00:16 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/07/31 16:45:02 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,24 +26,24 @@
 # define	TIME_TO_DIE 	800
 # define	TIME_TO_EAT 	200
 # define	TIME_TO_SLEEP 	200
-# define	MIN_MEALS 		7
+# define	MIN_MEALS 		0
 
-/*
 enum	e_state
 {
-	NOT_ALIVE,
+	LIMBO,
 	HUNGRY,
 	EATING,
 	SLEEPING,
 	THINKING
 };
-*/
+/*
 enum	e_state
 {
 	NOT_ALIVE,
 	FULL,
 	ALIVE
 };
+*/
 
 /* this holds the initial input data */
 typedef struct s_in_data
@@ -104,7 +104,7 @@ bool	meals_condition(t_data *philo);
 bool	life_monitor(t_data *data);
 
 /* routine.c */
-bool	pickup_forks(t_philo *philo);
+void	pickup_forks(t_philo *philo);
 void	eating(t_philo *philo);
 void	sleeping(t_philo *philo);
 void	*routine(void *philo_ptr);
