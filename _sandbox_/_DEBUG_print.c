@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:07:19 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/07/29 17:39:32 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/07/31 15:05:26 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,23 +16,26 @@
 /*
 char	*print_state(enum e_state state)
 {
-	if (state == HUNGRY)
-		return ("HUNGRY");
-	else if (state == EATING)
-		return ("EATING");
-	else if (state == SLEEPING)
-		return ("SLEEPING");
-	else if (state == THINKING)
-		return ("THINKING");
+	if (state == ALIVE)
+		return ("ALIVE");
 	return ("NOT_ALIVE");
 }
 */
 char	*print_state(enum e_state state)
 {
-	if (state == ALIVE)
-		return ("ALIVE");
-	return ("NOT_ALIVE");
+	if (state == HUNGRY)
+		return ("HUNGRY");
+	else if (state == EATING)
+		return ("EATING");
+	else if (state == EATING)
+		return ("FULL");
+	else if (state == SLEEPING)
+		return ("SLEEPING");
+	else if (state == THINKING)
+		return ("THINKING");
+	return ("IN LIMBO");
 }
+
 void	print_philo(t_data *data)
 {
 	t_philo	*philo;
