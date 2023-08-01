@@ -1,100 +1,41 @@
-/*
-MANDATORY PART
-
-Program name: philo
-
-Description: Philosophers with threads and mutexes
-
-Argumnets:	number_of_philosophers 
-			time_to_die
-			time_to_eat
-			time_to_sleep
-			[number_of_times_each_philosopher_must_eat]
-
-External functions:
-			memset, printf, malloc, free, write, usleep, gettimeofday, pthread_create,
-			pthread_detach, pthread_join, pthread_mutex_init, 
-			pthread_mutex_destroy, pthread_mutex_lock, pthread_mutex_unlock
-
-The specific rules for the mandatory part are:
-
-• Each philosopher should be a thread.
-
-• There is one fork between each pair of philosophers. Therefore, if there are several
-philosophers, each philosopher has a fork on their left side and a fork on their right
-side. If there is only one philosopher, there should be only one fork on the table.
-
-• To prevent philosophers from duplicating forks, you should protect the forks state
-with a mutex for each of them.
-
-=============================
-BONUS PART
-
-Program name: philo_bonus
-
-Description: Philosophers with processes and semaphores
-
-External functions:
-			memset, printf, malloc, free, write, fork, kill, exit, pthread_create, 
-			pthread_detach, pthread_join, usleep, gettimeofday, waitpid, 
-			sem_open, sem_close, sem_post, sem_wait, sem_unlink
-
-*/
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/08/01 19:29:19 by sbocanci          #+#    #+#             */
+/*   Updated: 2023/08/01 19:53:46 by sbocanci         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "philosophers.h"
 
 int	main(int argc, char **argv)
 {
-	(void)argc;
-	(void)argv;
+	t_data	data;
+	int		i;
 
-	t_data		data;
-	int			i;
-
-	init_input_data(&data);
+	if (parsing(&data, argc, argv) == false)
+		return (1);
 	if (!initialize_mutex(&data))
-		printf("Mutex init error\n");
+		return (printf("Mutex init error\n"), 1);
 	init_philo_struct(&data);
 	if (!launched_threads(&data))
-		printf("Thread Error\n");
-	/* DEBUG */
-	//printf("\tmonitoring\n");
-	/* ***** */
+		return (printf("Thread Error\n"), 1);
 	while (meals_condition(&data))
-	{
 		if (!life_monitor(&data))
 			break ;
-	}
-	/* DEBUG */
-	/*
-	pthread_mutex_lock(&(data.mutex_print_log));
-	i = -1;
-	while (++i < data.in_data.number_of_philosophers)
-	{
-		printf("\t[%ld] [%d] state:[%s]\t", timestamp(&data), i, print_state(data.philos[i].status.state));
-		printf("\tmelals:[%d], min_meals:[%ld]\n", data.philos[i].status.meals, data.in_data.number_of_meals);
-	}
-	pthread_mutex_unlock(&(data.mutex_print_log));
-	*/
-	/* ***** */
 	i = 0;
 	while (i < data.in_data.number_of_philosophers)
-	{
-		if (pthread_join(data.philos[i].thread, NULL) != 0)
-		{
-			printf("Pthread join error\n");
-		}
-		i++;
-	}
+		if (pthread_join(data.philos[i++].thread, NULL) != 0)
+			return (printf("Pthread join error\n"), 1);
+	print_meals_condition(&data);
 	i = 0;
 	while (i < data.in_data.number_of_philosophers)
-	{
-		if (pthread_mutex_destroy(&(data.forks[i])) != 0)
-		{
-			printf("Pthread mutex destroy error\n");
-		}
-		i++;
-	}
+		if (pthread_mutex_destroy(&(data.forks[i++])) != 0)
+			return (printf("Pthread mutex destroy error\n"), 1);
 	pthread_mutex_destroy(&(data.mutex_print_log));
-	return 0;
+	return (0);
 }

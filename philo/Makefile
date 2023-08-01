@@ -31,6 +31,8 @@ SRCS        := 					\
 				initialize.c	\
 				main.c			\
 				monitor.c		\
+				parsing.c		\
+				parsing_utils.c	\
 				routine.c		\
 				../_sandbox_/_DEBUG_print.c		\
 
@@ -50,10 +52,11 @@ all: $(NAME)
 
 $(NAME): $(OBJS)
 	$(CC) $(OBJS) -o $(NAME)
-	@printf "\e[92;5;118m\n>>> PHILOSOPHERS ARE READY <<<\n\e[0m"
+	@printf "\033[0;32m>>> PHILOSOPHERS ARE READY <<<\n\033[00m"
 
 $%.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
+	@echo -e "\e[36mGenerating $(NAME) objects...\033[0m\e[34m%-33.33s\r\e[0m" $@
 
 clean:
 	$(RM) $(OBJS)
@@ -71,6 +74,6 @@ re:
 
 .PHONY: clean fclean re
 
-.SILENT:
+#.SILENT:
 
 #############################################

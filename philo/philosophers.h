@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:20:39 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/07/31 16:45:02 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/01 19:55:38 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,11 +22,7 @@
 # include <sys/time.h>
 # include <time.h>
 
-# define	PHILO_NUM 		5
-# define	TIME_TO_DIE 	800
-# define	TIME_TO_EAT 	200
-# define	TIME_TO_SLEEP 	200
-# define	MIN_MEALS 		0
+# define MAX_PHILO 200	
 
 enum	e_state
 {
@@ -36,23 +32,15 @@ enum	e_state
 	SLEEPING,
 	THINKING
 };
-/*
-enum	e_state
-{
-	NOT_ALIVE,
-	FULL,
-	ALIVE
-};
-*/
 
 /* this holds the initial input data */
 typedef struct s_in_data
 {
-	long	number_of_philosophers;
-	long	time_to_die;
-	long	time_to_eat;
-	long	time_to_sleep;
-	long	number_of_meals;
+	int	number_of_philosophers;
+	int	time_to_die;
+	int	time_to_eat;
+	int	time_to_sleep;
+	int	number_of_meals;
 }	t_in_data;
 
 /* this data reflects the current status of the philo */
@@ -78,30 +66,40 @@ typedef struct s_data
 {
 	int64_t			start_time;
 	t_in_data		in_data;
-	t_philo			philos[PHILO_NUM];
-	pthread_mutex_t	forks[PHILO_NUM];
+	t_philo			philos[MAX_PHILO];
+	pthread_mutex_t	forks[MAX_PHILO];
 	pthread_mutex_t	mutex_print_log;
+	bool			meals_condition;
 }	t_data;
 
 /* main.c */
 
 /* helpers.c */
-long	get_current_time();
+long	get_current_time(void);
 int64_t	timestamp(t_data *data);
+void	ft_usleep(t_philo *philo, int ms);
+void	print_meals_condition(t_data *data);
 void	print_log(t_philo *philo, char *message);
-void	ft_usleep(int ms);
 
 /* initialize.c */
 void	init_philo_struct(t_data *data);
-void	init_input_data(t_data *data);
 bool	initialize_mutex(t_data *data);
 bool	launched_threads(t_data *data);
 
 /* monitor.c */
-//bool	philosophers_alive(t_philo *philo);
 bool	meals_condition(t_data *philo);
-//bool	available_meals(t_philo *philo);
 bool	life_monitor(t_data *data);
+
+/* parsing_utils */
+int		ft_strlen(char *str);
+int		ft_strcmp(char *s1, char *s2);
+int		ft_atoi(char *str);
+bool	is_number(char *str);
+
+/* parsing */
+bool	valid_number(char *str);
+bool	init_input_data(t_data *data, int argc, char **argv);
+bool	parsing(t_data *data, int argc, char **argv);
 
 /* routine.c */
 void	pickup_forks(t_philo *philo);
@@ -112,7 +110,6 @@ void	*routine(void *philo_ptr);
 /* DEBUG */
 char	*print_state(enum e_state state);
 void	print_philo(t_data *data);
-
 /* ***** */
 
 #endif

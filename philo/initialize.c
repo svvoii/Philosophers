@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:17:36 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/07/31 16:09:38 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/01 19:35:15 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,19 +30,11 @@ void	init_philo_struct(t_data *data)
 		philo->status.state = HUNGRY;
 		philo->status.meals = 0;
 		philo->status.last_meal_time = data->start_time;
-		philo->status.next_meal_time = philo->status.last_meal_time + data->in_data.time_to_die;
+		philo->status.next_meal_time = data->start_time + \
+									data->in_data.time_to_die;
 		philo->data = data;
 		i++;
 	}
-}
-
-void	init_input_data(t_data *data)
-{
-	data->in_data.number_of_philosophers = PHILO_NUM;
-	data->in_data.time_to_die = TIME_TO_DIE;
-	data->in_data.time_to_eat = TIME_TO_EAT;
-	data->in_data.time_to_sleep = TIME_TO_SLEEP;
-	data->in_data.number_of_meals = MIN_MEALS;
 }
 
 bool	initialize_mutex(t_data *data)
@@ -63,15 +55,13 @@ bool	initialize_mutex(t_data *data)
 
 bool	launched_threads(t_data *data)
 {
-	//t_philo	*philo;
 	int		i;
 
 	i = 0;
 	while (i < data->in_data.number_of_philosophers)
 	{
-		//philo = &(data->philos[i]);
-		//if (pthread_create(&(philo->thread), NULL, &routine, philo) != 0)
-		if (pthread_create(&(data->philos[i].thread), NULL, &routine, &(data->philos[i])) != 0)
+		if (pthread_create(&(data->philos[i].thread), NULL, \
+							&routine, &(data->philos[i])) != 0)
 			return (false);
 		i++;
 	}
