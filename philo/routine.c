@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:12:52 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/01 20:01:54 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/02 18:26:13 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,11 +68,31 @@ void	thinking(t_philo *philo)
 		philo->status.state = HUNGRY;
 }
 
+bool	last_thread(t_philo *philo)
+{
+	t_data	*data;
+
+	data = philo->data;
+	pthread_mutex_lock(&(data->mutex_start));
+	if (data->start == true)
+	{
+		pthread_mutex_unlock(&(data->mutex_start));
+		return (true);
+	}
+	pthread_mutex_unlock(&(data->mutex_start));
+	return (false);
+}
+
 void	*routine(void *philo_ptr)
 {
 	t_philo	*philo;
 
 	philo = (t_philo *)philo_ptr;
+	while (last_thread(philo) == false)
+	{
+		usleep(10);
+	}
+	//print_log(philo, "START");
 	while (philo->status.state != LIMBO)
 	{
 		if (philo->status.state == HUNGRY)

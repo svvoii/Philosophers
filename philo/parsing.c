@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:17:36 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/01 19:39:54 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/02 18:04:34 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,6 +54,7 @@ bool	init_input_data(t_data *data, int argc, char **argv)
 	if (argc == 6)
 		data->in_data.number_of_meals = ft_atoi(argv[5]);
 	data->meals_condition = false;
+	data->start = false;
 	return (true);
 }
 

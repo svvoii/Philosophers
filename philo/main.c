@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/01 19:29:19 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/01 19:53:46 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/02 17:33:34 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,5 +37,7 @@ int	main(int argc, char **argv)
 		if (pthread_mutex_destroy(&(data.forks[i++])) != 0)
 			return (printf("Pthread mutex destroy error\n"), 1);
 	pthread_mutex_destroy(&(data.mutex_print_log));
+	pthread_mutex_destroy(&(data.mutex_lock));
+	pthread_mutex_destroy(&(data.mutex_start));
 	return (0);
 }

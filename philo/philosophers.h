@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:20:39 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/01 19:55:38 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/02 17:54:05 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,9 @@ typedef struct s_data
 	t_philo			philos[MAX_PHILO];
 	pthread_mutex_t	forks[MAX_PHILO];
 	pthread_mutex_t	mutex_print_log;
+	pthread_mutex_t	mutex_lock;
+	pthread_mutex_t	mutex_start;
+	bool			start;
 	bool			meals_condition;
 }	t_data;
 

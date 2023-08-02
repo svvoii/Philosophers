@@ -12,7 +12,7 @@
 
 #############################################
 
-NAME := Philosophers
+NAME := philo
 _NC=`tput sgr0`
 _RED=\033[0;31m
 _GREEN=\033[0;32m

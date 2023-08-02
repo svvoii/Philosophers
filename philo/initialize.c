@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:17:36 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/01 19:35:15 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/02 18:26:07 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,10 @@ bool	initialize_mutex(t_data *data)
 
 	if (pthread_mutex_init(&(data->mutex_print_log), NULL) != 0)
 		return (false);
+	if (pthread_mutex_init(&(data->mutex_lock), NULL) != 0)
+		return (false);
+	if (pthread_mutex_init(&(data->mutex_start), NULL) != 0)
+		return (false);
 	i = 0;
 	while (i < data->in_data.number_of_philosophers)
 	{
@@ -51,6 +55,26 @@ bool	initialize_mutex(t_data *data)
 		i++;
 	}
 	return (true);
+}
+
+void	ft_start(t_data *data)
+{
+	t_philo	*philo;
+	int		i;
+
+	data->start_time = get_current_time();
+	i = 0;
+	while (i < data->in_data.number_of_philosophers)
+	{
+		philo = &(data->philos[i]);
+		philo->status.last_meal_time = data->start_time;
+		philo->status.next_meal_time = data->start_time + \
+									data->in_data.time_to_die;
+		i++;
+	}
+	pthread_mutex_lock(&(data->mutex_start));
+	data->start = true;
+	pthread_mutex_unlock(&(data->mutex_start));
 }
 
 bool	launched_threads(t_data *data)
@@ -65,5 +89,6 @@ bool	launched_threads(t_data *data)
 			return (false);
 		i++;
 	}
+	ft_start(data);
 	return (true);
 }
