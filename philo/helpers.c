@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:07:19 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/03 15:54:07 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/03 17:22:22 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ void	ft_usleep(t_philo *philo, int ms)
 	time = get_current_time();
 	while (get_current_time() < time + ms)
 	{
-		if (philo->status.state == LIMBO)
+		if (state_limbo(philo) == true)
 			break ;
 		usleep(3);
 	}

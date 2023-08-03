@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:15:28 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/03 15:27:29 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/03 17:30:38 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 static void	set_status_to_limbo(t_data *data)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	while (i < data->in_data.number_of_philosophers)

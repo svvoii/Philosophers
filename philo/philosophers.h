@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:20:39 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/03 15:40:04 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/03 17:38:00 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,16 +104,17 @@ bool	valid_number(char *str);
 bool	init_input_data(t_data *data, int argc, char **argv);
 bool	parsing(t_data *data, int argc, char **argv);
 
+/* routine_utils.c */
+void	pickup_forks(t_philo *philo);
+void	eating(t_philo *philo);
+void	sleeping(t_philo *philo);
+void	thinking(t_philo *philo);
+
 /* routine.c */
 bool	state_limbo(t_philo *philo);
 void	pickup_forks(t_philo *philo);
 void	eating(t_philo *philo);
 void	sleeping(t_philo *philo);
 void	*routine(void *philo_ptr);
-
-/* DEBUG */
-char	*print_state(enum e_state state);
-void	print_philo(t_data *data);
-/* ***** */
 
 #endif

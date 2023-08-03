@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:17:36 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/03 12:14:21 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/03 17:05:59 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,7 @@ bool	valid_number(char *str)
 	if (!is_number(str))
 		return (false);
 	len = ft_strlen(str);
-	if (len > 10)
-		return (false);
-	else if (len == 10 && ft_strcmp("2147483647", str))
+	if ((len > 10) || (len == 10 && ft_strcmp("2147483647", str) < 0))
 	{
 		printf("Error: %s: argument must be number within MAX_INT\n", str);
 		return (false);
