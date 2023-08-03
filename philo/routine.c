@@ -6,11 +6,23 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:12:52 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/02 18:26:13 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/03 15:58:45 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
+
+bool	state_limbo(t_philo *philo)
+{
+	pthread_mutex_lock(&(philo->data->mutex_lock));
+	if (philo->status.state == LIMBO)
+	{
+		pthread_mutex_unlock(&(philo->data->mutex_lock));
+		return (true);
+	}
+	pthread_mutex_unlock(&(philo->data->mutex_lock));
+	return (false);
+}
 
 void	pickup_forks(t_philo *philo)
 {
@@ -30,7 +42,7 @@ void	pickup_forks(t_philo *philo)
 		pthread_mutex_lock(&(philo->data->forks[philo->left_fork]));
 		print_log(philo, "picked LEFT fork");
 	}
-	if (philo->status.state != LIMBO)
+	if (state_limbo(philo) == false)
 		philo->status.state = EATING;
 	else
 	{
@@ -39,15 +51,32 @@ void	pickup_forks(t_philo *philo)
 	}
 }
 
+void	reset_meal_time(t_philo *philo)
+{
+	t_status	*status;
+	int			time_to_die;
+
+	status = &philo->status;
+	time_to_die = philo->data->in_data.time_to_die;
+	status->last_meal_time = get_current_time();
+	pthread_mutex_lock(&(philo->data->mutex_lock));
+	status->meals++;
+	status->next_meal_time = status->last_meal_time + time_to_die;
+	pthread_mutex_unlock(&(philo->data->mutex_lock));
+}
+
 void	eating(t_philo *philo)
 {
 	print_log(philo, "is eating");
+	reset_meal_time(philo);
+	/*
 	philo->status.meals++;
 	philo->status.last_meal_time = get_current_time();
 	philo->status.next_meal_time = philo->status.last_meal_time + \
 									philo->data->in_data.time_to_die;
+	*/
 	ft_usleep(philo, philo->data->in_data.time_to_eat);
-	if (philo->status.state != LIMBO)
+	if (state_limbo(philo) == false)
 		philo->status.state = SLEEPING;
 	pthread_mutex_unlock(&(philo->data->forks[philo->left_fork]));
 	pthread_mutex_unlock(&(philo->data->forks[philo->right_fork]));
@@ -57,14 +86,14 @@ void	sleeping(t_philo *philo)
 {
 	print_log(philo, "is sleeping");
 	ft_usleep(philo, philo->data->in_data.time_to_sleep);
-	if (philo->status.state != LIMBO)
+	if (state_limbo(philo) == false)
 		philo->status.state = THINKING;
 }
 
 void	thinking(t_philo *philo)
 {
 	print_log(philo, "is thinking");
-	if (philo->status.state != LIMBO)
+	if (state_limbo(philo) == false)
 		philo->status.state = HUNGRY;
 }
 
@@ -92,8 +121,7 @@ void	*routine(void *philo_ptr)
 	{
 		usleep(10);
 	}
-	//print_log(philo, "START");
-	while (philo->status.state != LIMBO)
+	while (state_limbo(philo) == false)
 	{
 		if (philo->status.state == HUNGRY)
 		{

@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:17:36 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/02 18:04:34 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/03 12:14:21 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ bool	parsing(t_data *data, int argc, char **argv)
 	{
 		printf("Error: wrong number of arguments\n");
 		printf("Useage example:\n");
-		printf("\t./Philosophers 5 800 200 200 7\n");
+		printf("\t./philo 5 800 200 200 7\n");
 		printf("\t5:\t'Number of philosophers'\n");
 		printf("\t800:\t'time to die'\n");
 		printf("\t200:\t'time to eat'\n");

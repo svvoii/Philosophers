@@ -6,7 +6,7 @@
 /*   By: sbocanci <sbocanci@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/28 12:07:19 by sbocanci          #+#    #+#             */
-/*   Updated: 2023/08/01 19:54:50 by sbocanci         ###   ########.fr       */
+/*   Updated: 2023/08/03 15:54:07 by sbocanci         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,7 +56,7 @@ void	print_log(t_philo *philo, char *message)
 	t_data	*data;
 
 	data = philo->data;
-	if (philo->status.state != LIMBO)
+	if (state_limbo(philo) == false)
 	{
 		pthread_mutex_lock(&(philo->data->mutex_print_log));
 		printf("%ld %d %s\n", timestamp(data), philo->id + 1, message);
